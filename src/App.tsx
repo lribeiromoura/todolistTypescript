@@ -1,25 +1,75 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useState, useEffect } from 'react';
+import * as C from './App.styles';
+import { Item } from './types/Item';
+import { ListItem } from './components/ListItem';
+import { AddArea } from './components/AddArea';
 
-function App() {
+const App = () => {
+  
+  const [list, setList] = useState<Item[]>([]);
+
+  const saveLocalStorage = (list: any) => {
+    localStorage.setItem('list', JSON.stringify(list));
+  };
+
+  const handleAddTask = (taskName: string) => {
+    let newList = [...list];
+    newList.push({
+      id: list.length + 1,
+      name: taskName,
+      done: false,
+    });
+    saveLocalStorage(newList);
+    setList(newList);
+  };
+
+  const handleItemStatus = (itemChanged: Item) => {
+    list.forEach(item => {
+      if(item.id === itemChanged.id) {
+          itemChanged.done = !item.done;
+          return;
+      }
+  });
+    setList([...list]);
+    saveLocalStorage([...list]);
+  };
+
+  const handleRemoveItem = (itemRemoved: Item) => {
+    let newList = [...list];
+    newList.forEach((item, index) => {
+      if(item.id === itemRemoved.id) {
+        newList.splice(index,1);
+      }
+    });
+    setList(newList);
+    saveLocalStorage(newList);
+  };
+
+  useEffect(() => {
+    let list = JSON.parse(localStorage.getItem('list') || '[]');
+    if(list === null) {
+      list = [];
+    }
+    setList(list);
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <C.Container>
+      <C.Area>
+        <C.Header>Todo List</C.Header>
+        {/* Nova Tarefa */}
+        <AddArea onEnter={handleAddTask} ></AddArea>
+
+
+        {/* Lista de Tarefas */}
+
+        {
+          list.map((item, index)=> (
+            <ListItem key={index} item={item} onStatusChanged={handleItemStatus} onRemoveItem={handleRemoveItem}/>
+          ))
+        }
+      </C.Area>
+    </C.Container>
   );
 }
 
